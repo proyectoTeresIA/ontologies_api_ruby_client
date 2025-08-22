@@ -4,7 +4,11 @@ module LinkedData
   module Client
     module Models
       class Property < LinkedData::Client::Base
-        @media_type = "http://data.bioontology.org/metadata/Property"
+        # Set media_type dynamically based on configuration
+        def self.media_type
+          @media_type ||= LinkedData::Client.metadata_url('metadata/Property')
+        end
+        
         @act_as_media_type = ["http://www.w3.org/2002/07/owl#DatatypeProperty", "http://www.w3.org/2002/07/owl#ObjectProperty", "http://www.w3.org/2002/07/owl#AnnotationProperty"]
         @include_attrs = "all"
 

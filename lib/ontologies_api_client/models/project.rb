@@ -7,7 +7,10 @@ module LinkedData
         include LinkedData::Client::Collection
         include LinkedData::Client::ReadWrite
 
-        @media_type = "http://data.bioontology.org/metadata/Project"
+        # Set media_type dynamically based on configuration
+        def self.media_type
+          @media_type ||= LinkedData::Client.metadata_url('metadata/Project')
+        end
       end
     end
   end

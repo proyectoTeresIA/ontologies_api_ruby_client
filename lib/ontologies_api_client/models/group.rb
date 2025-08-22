@@ -5,7 +5,11 @@ module LinkedData
     module Models
       class Group < LinkedData::Client::Base
         include LinkedData::Client::Collection
-        @media_type = "http://data.bioontology.org/metadata/Group"
+        
+        # Set media_type dynamically based on configuration
+        def self.media_type
+          @media_type ||= LinkedData::Client.metadata_url('metadata/Group')
+        end
       end
     end
   end

@@ -6,7 +6,10 @@ module LinkedData
       class Metrics < LinkedData::Client::Base
         include LinkedData::Client::Collection
 
-        @media_type = "http://data.bioontology.org/metadata/Metrics"
+        # Set media_type dynamically based on configuration
+        def self.media_type
+          @media_type ||= LinkedData::Client.metadata_url('metadata/Metrics')
+        end
       end
     end
   end

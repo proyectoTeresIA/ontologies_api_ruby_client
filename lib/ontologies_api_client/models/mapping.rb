@@ -8,7 +8,10 @@ module LinkedData
         include LinkedData::Client::Collection
         include LinkedData::Client::ReadWrite
 
-        @media_type = "http://data.bioontology.org/metadata/Mapping"
+        # Set media_type dynamically based on configuration
+        def self.media_type
+          @media_type ||= LinkedData::Client.metadata_url('metadata/Mapping')
+        end
 
         def self.find(id, params = {})
           template = Addressable::Template.new("#{mappings_url_prefix}/{mapping}")

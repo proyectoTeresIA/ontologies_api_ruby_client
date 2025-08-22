@@ -84,5 +84,11 @@ module LinkedData
     def connection_configured?
       @settings_run_connection
     end
+
+    # Helper method to generate metadata URLs dynamically based on rest_url configuration
+    def metadata_url(path)
+      base_url = @settings.rest_url || 'http://stagedata.bioontology.org'
+      "#{base_url}/#{path.sub(/^\//, '')}"
+    end
   end
 end
