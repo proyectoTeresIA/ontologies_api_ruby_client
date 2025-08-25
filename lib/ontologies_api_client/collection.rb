@@ -31,9 +31,19 @@ module LinkedData
         ##
         # Return a link given an object (with links) and a media type
         def uri_from_context(object, media_type)
-          object.links.each do |type, link|
-            return link if link.media_type && link.media_type.downcase.eql?(media_type.downcase)
+          if object.context && object.links
+            object.context.each do |link_name, link_media_type|
+              if link_media_type == media_type && object.links[link_name]
+                return object.links[link_name]
+              end
+            end
           end
+          
+          object.links.each do |type, link|
+            return link if link.respond_to?(:media_type) && link.media_type && media_type && link.media_type.downcase.eql?(media_type.downcase)
+          end
+          
+          nil
         end
 
         ##
