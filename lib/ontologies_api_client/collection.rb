@@ -56,14 +56,14 @@ module LinkedData
         ##
         # For a type that is already defined, get the collection path
         def collection_path
-          uri_from_context(top_level_links, @media_type)
+          uri_from_context(top_level_links, self.media_type)
         end
 
         ##
         # Get all resources from the base collection for a resource
         def all(*args)
           params = args.shift || {}
-          entry_point(@media_type, params)
+          entry_point(self.media_type, params)
         end
 
         ##
