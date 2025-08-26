@@ -115,13 +115,31 @@ module LinkedData
         end
 
         def self.find_by_acronym(acronym, params = {})
-          [find(acronym, params)]
+          ontologies = self.where({acronym: acronym}, params)
+          return ontologies
         end
 
         ##
         # Include parameters commonly used with ontologies
         def self.include_params
           'acronym,administeredBy,group,hasDomain,name,notes,projects,reviews,summaryOnly,viewingRestriction'
+        end
+      
+      def self.id_to_rest_url(id_or_acronym)
+        if id_or_acronym.is_a?(String)
+          if id_or_acronym.include?('/metadata/ontologies/')
+            # Convert semantic ID to REST endpoint
+            acronym = id_or_acronym.split('/').last
+            "#{LinkedData::Client.settings.rest_url}/ontologies/#{acronym}"
+          elsif id_or_acronym.match(/^[A-Z0-9_-]+$/i)
+            # It's just an acronym
+            "#{LinkedData::Client.settings.rest_url}/ontologies/#{id_or_acronym}"
+          else
+            # Fallback to original
+            id_or_acronym
+          end
+        else
+          id_or_acronym
         end
       end
     end

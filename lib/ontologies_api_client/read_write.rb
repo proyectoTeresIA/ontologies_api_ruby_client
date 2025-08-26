@@ -48,10 +48,12 @@ module LinkedData
         changed_attrs
       end
 
-      def delete
-        resp = HTTP.delete(self.id)
-        cache_refresh
-        resp
+      def delete(invalidate_cache = true)
+        delete_url = self.class.id_to_rest_url(@id) if @id
+        if invalidate_cache
+          cache_refresh
+        end
+        LinkedData::Client::HTTP.delete(delete_url, self.class.media_type)
       end
 
       private
@@ -85,11 +87,15 @@ module LinkedData
         return current_value.eql?(new_value) rescue current_value == new_value
       end
 
-      def invalidate_cache(cache_refresh_all = true)
-        self.class.all(invalidate_cache: true) if cache_refresh_all
-        HTTP.get(self.id, invalidate_cache: true) if self.id
-        session = Thread.current[:session]
-        session[:last_updated] = Time.now.to_f if session
+      def invalidate_cache
+        url = self.class.id_to_rest_url(@id) if @id
+        return unless url
+        
+        begin
+          LinkedData::Client::HTTP.get(url)
+        rescue Exception => e
+          puts "Warning: Could not invalidate cache for #{url}: #{e.message}" if LinkedData::Client.settings.debug_client
+        end
       end
     end
   end
