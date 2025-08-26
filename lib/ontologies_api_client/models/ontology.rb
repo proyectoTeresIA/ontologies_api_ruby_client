@@ -131,12 +131,23 @@ module LinkedData
               # Convert semantic ID to REST endpoint
               acronym = id_or_acronym.split('/').last
               "#{LinkedData::Client.settings.rest_url}/ontologies/#{acronym}"
-            elsif id_or_acronym.match(/^[A-Z0-9_-]+$/i)
+            elsif id_or_acronym.match(/^[A-Z0-9_-]+$/i) && !id_or_acronym.include?('/')
               # It's just an acronym
               "#{LinkedData::Client.settings.rest_url}/ontologies/#{id_or_acronym}"
-            else
-              # Fallback to original
+            elsif id_or_acronym.start_with?('ontologies/') || id_or_acronym.start_with?('/ontologies/')
+              # Handle relative URLs like "ontologies/AAA/submissions/1" or "/ontologies/AAA/submissions/1"
+              clean_path = id_or_acronym.start_with?('/') ? id_or_acronym[1..-1] : id_or_acronym
+              "#{LinkedData::Client.settings.rest_url}/#{clean_path}"
+            elsif id_or_acronym.start_with?('http://') || id_or_acronym.start_with?('https://')
+              # Already absolute URL
               id_or_acronym
+            else
+              base_url = LinkedData::Client.settings.rest_url
+              if id_or_acronym.start_with?('/')
+                "#{base_url}#{id_or_acronym}"
+              else
+                "#{base_url}/#{id_or_acronym}"
+              end
             end
           else
             id_or_acronym
