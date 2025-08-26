@@ -29,24 +29,82 @@ module LinkedData
 
       def self.class_for_type(media_type)
         if defined? @media_type_class_map
-          return @media_type_class_map[media_type]
+          result = @media_type_class_map[media_type]
+          if result
+            return result
+          end
         end
+        
+        # If not found in cache, try direct lookup by scanning classes
+        classes = LinkedData::Client::Models.constants.map {|c| LinkedData::Client::Models.const_get(c)}
+        classes.each do |media_type_cls|
+          next unless media_type_cls.ancestors.include?(LinkedData::Client::Base)
+          
+          begin
+            # Check if this class has the media_type we're looking for
+            if media_type_cls.respond_to?(:media_type)
+              cls_media_type = media_type_cls.media_type
+              if cls_media_type == media_type
+                return media_type_cls
+              end
+            end
+            
+            if media_type_cls.respond_to?(:media_types)
+              cls_media_types = media_type_cls.media_types
+              if cls_media_types.include?(media_type)
+                return media_type_cls
+              end
+            end
+          rescue => e
+            # Skip classes that fail media_type lookup
+            next
+          end
+        end
+        
+        # If still not found, rebuild the map and try once more
         @media_type_class_map = map_classes
-        return @media_type_class_map[media_type]
+        @media_type_class_map[media_type]
       end
 
       def self.map_classes
         map = {}
         classes = LinkedData::Client::Models.constants.map {|c| LinkedData::Client::Models.const_get(c)}
+        
         classes.each do |media_type_cls|
-          next if map[media_type_cls] || !media_type_cls.respond_to?(:media_types) || !media_type_cls.ancestors.include?(LinkedData::Client::Base)
-          media_type_cls.media_types.each do |type|
-            next if map[type]
+          next if map[media_type_cls] || (!media_type_cls.respond_to?(:media_types) && !media_type_cls.respond_to?(:media_type)) || !media_type_cls.ancestors.include?(LinkedData::Client::Base)
+          
+          # Handle both static and dynamic media types
+          types_to_map = []
+          
+          if media_type_cls.respond_to?(:media_types)
+            begin
+              types_to_map.concat(media_type_cls.media_types)
+            rescue => e
+              # Skip classes that fail to provide media_types
+              next
+            end
+          end
+          
+          if media_type_cls.respond_to?(:media_type)
+            begin
+              types_to_map << media_type_cls.media_type
+            rescue => e
+              # Skip classes that fail to provide media_type
+              next
+            end
+          end
+          
+          types_to_map.each do |type|
+            next if type.nil? || map[type]
             map[type] = media_type_cls
           end
-          media_type_cls.act_as_media_type.each {|mt| map[mt] = media_type_cls} if media_type_cls.act_as_media_type
+          
+          if media_type_cls.respond_to?(:act_as_media_type) && media_type_cls.act_as_media_type
+            media_type_cls.act_as_media_type.each {|mt| map[mt] = media_type_cls}
+          end
         end
-        return map
+        
+        map
       end
 
       def initialize(options = {})

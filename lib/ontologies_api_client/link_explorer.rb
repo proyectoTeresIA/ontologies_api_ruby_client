@@ -45,7 +45,14 @@ module LinkedData
         else
           url = replace_template_elements(link.to_s, replacements)
           value_cls = LinkedData::Client::Base.class_for_type(link.media_type)
-          params[:include] ||= value_cls.attributes(full_attributes)
+          if value_cls && value_cls.respond_to?(:attributes)
+            begin
+              params[:include] ||= value_cls.attributes(full_attributes)
+            rescue => e
+              # Continue without attributes if there's an error
+              Rails.logger.warn "Could not get attributes for #{value_cls}: #{e.message}" if defined?(Rails)
+            end
+          end
           HTTP.get(url, params)
         end
       end
