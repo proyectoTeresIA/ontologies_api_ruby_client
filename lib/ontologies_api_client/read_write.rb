@@ -59,8 +59,7 @@ module LinkedData
       private
 
       def cache_refresh(options = {})
-        # cache_refresh_all allow to avoid to refresh everything, to make it faster when saving/updating a submission
-        invalidate_cache(options[:cache_refresh_all] || options[:cache_refresh_all].nil?)
+        invalidate_cache()
       end
 
       def equivalent?(current_value, new_value)
