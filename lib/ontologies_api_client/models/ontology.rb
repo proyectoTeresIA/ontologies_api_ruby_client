@@ -115,8 +115,7 @@ module LinkedData
         end
 
         def self.find_by_acronym(acronym, params = {})
-          ontologies = self.where({acronym: acronym}, params)
-          return ontologies
+          [find(acronym, params)]
         end
 
         ##
